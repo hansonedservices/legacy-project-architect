@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Feather, User, GraduationCap, BookOpen, Shield } from "lucide-react";
-import { saveUser, type UserProfile, type UserRole } from "@/lib/userStore";
+import { Feather, User, GraduationCap, BookOpen, Shield, Loader2 } from "lucide-react";
+import { createProfile, type UserProfile, type UserRole } from "@/lib/userStore";
 
 interface Props {
   onComplete: (profile: UserProfile) => void;
@@ -33,26 +33,22 @@ export default function UserAuth({ onComplete }: Props) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<UserRole>("student");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) {
-      setError("Please enter your name to continue.");
-      return;
+    if (!trimmed) { setError("Please enter your name to continue."); return; }
+    if (trimmed.length < 2) { setError("Name must be at least 2 characters."); return; }
+    setSaving(true);
+    try {
+      const profile = await createProfile(trimmed, role);
+      onComplete(profile);
+    } catch {
+      setError("Couldn't save your profile — check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
-    if (trimmed.length < 2) {
-      setError("Name must be at least 2 characters.");
-      return;
-    }
-    const profile: UserProfile = {
-      id: crypto.randomUUID(),
-      name: trimmed,
-      role,
-      createdAt: new Date().toISOString(),
-    };
-    saveUser(profile);
-    onComplete(profile);
   };
 
   return (
@@ -139,10 +135,11 @@ export default function UserAuth({ onComplete }: Props) {
 
             <button
               type="submit"
-              className="btn-crimson w-full py-3 text-sm font-semibold flex items-center justify-center gap-2"
+              disabled={saving}
+              className="btn-crimson w-full py-3 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Feather size={15} />
-              Enter the Archive
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Feather size={15} />}
+              {saving ? "Saving…" : "Enter the Archive"}
             </button>
           </form>
         </div>

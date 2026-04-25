@@ -7,10 +7,11 @@ import PersonaStitcher, { type PersonaBlueprint } from "@/components/PersonaStit
 import LegacyArena from "@/components/LegacyArena";
 import UserAuth from "@/components/UserAuth";
 import {
-  getUser,
-  clearUser,
-  addHistoryRecord,
-  getHistory,
+  getLocalUserId,
+  clearLocalUser,
+  fetchProfile,
+  fetchHistory,
+  saveDebateSession,
   type UserProfile,
   type DebateRecord,
 } from "@/lib/userStore";
@@ -38,16 +39,20 @@ export default function Home() {
   const [history, setHistory] = useState<DebateRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // On mount, check localStorage for existing user
+  // On mount, check localStorage for user ID then fetch from Supabase
   useEffect(() => {
-    const saved = getUser();
-    if (saved) {
-      setUser(saved);
-      setHistory(getHistory());
-      setStage("configure");
-    } else {
-      setStage("auth");
-    }
+    const id = getLocalUserId();
+    if (!id) { setStage("auth"); return; }
+    Promise.all([fetchProfile(id), fetchHistory(id)]).then(([profile, history]) => {
+      if (profile) {
+        setUser(profile);
+        setHistory(history);
+        setStage("configure");
+      } else {
+        clearLocalUser();
+        setStage("auth");
+      }
+    });
   }, []);
 
   const handleAuthComplete = (profile: UserProfile) => {
@@ -62,16 +67,17 @@ export default function Home() {
   };
 
   const handleReset = (messageCount = 0) => {
-    if (blueprint && messageCount > 0) {
-      addHistoryRecord({
+    if (blueprint && messageCount > 0 && user) {
+      const record = {
         figureIcon: blueprint.figure.icon,
         figureName: blueprint.figure.name,
         dilemma: blueprint.dilemma.label,
         mode: blueprint.mode,
         messageCount,
         grounded: !!curriculum,
-      });
-      setHistory(getHistory());
+      };
+      saveDebateSession(user.id, record);
+      setHistory((prev) => [{ ...record, id: crypto.randomUUID(), date: new Date().toISOString() }, ...prev]);
     }
     setBlueprint(null);
     setCurriculum(null);
@@ -79,8 +85,9 @@ export default function Home() {
   };
 
   const handleSignOut = () => {
-    clearUser();
+    clearLocalUser();
     setUser(null);
+    setHistory([]);
     setBlueprint(null);
     setCurriculum(null);
     setShowUserMenu(false);
