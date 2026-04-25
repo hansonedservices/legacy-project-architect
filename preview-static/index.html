@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Legacy Project Architect — Williamsburg Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory: '#FDFCF0',
+            'ivory-dark': '#F5F3DC',
+            'ivory-border': '#E8E4C8',
+            crimson: { DEFAULT: '#DC143C', hover: '#B01030', light: '#FFF0F3' },
+            parchment: { DEFAULT: '#F0EAD6', dark: '#D4C9A8', text: '#5C4A2A' },
+          },
+          fontFamily: {
+            serif: ["'Playfair Display'", 'Georgia', 'serif'],
+            sans: ["'Inter'", 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #FDFCF0; color: #1E293B; font-family: 'Inter', sans-serif; }
+    .parchment-card { background-color: #FDFCF0; border: 1px solid #E8E4C8; border-radius: 0.5rem; box-shadow: 0 4px 24px rgba(92,74,42,0.12), 0 1px 4px rgba(92,74,42,0.08); background-image: repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(180,160,100,0.04) 28px,rgba(180,160,100,0.04) 29px); }
+    .btn-crimson { background-color: #DC143C; color: white; font-weight: 500; padding: 0.625rem 1.25rem; border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-crimson:hover { background-color: #B01030; }
+    .btn-outline { border: 1px solid #E8E4C8; color: #1E293B; background: white; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+    .btn-outline:hover { background-color: #F5F3DC; }
+    .legacy-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5C4A2A; display: block; margin-bottom: 0.5rem; }
+    .legacy-input { width: 100%; border-radius: 0.375rem; border: 1px solid #E8E4C8; background: white; padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #1E293B; outline: none; box-sizing: border-box; }
+    .legacy-input:focus { border-color: rgba(220,20,60,0.6); box-shadow: 0 0 0 2px rgba(220,20,60,0.15); }
+    .font-serif { font-family: 'Playfair Display', Georgia, serif !important; }
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: #F5F3DC; } ::-webkit-scrollbar-thumb { background: #D4C9A8; border-radius: 3px; }
+    .mode-btn { border: 1px solid #E8E4C8; border-radius: 0.375rem; padding: 0.75rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.15s; font-size: 0.75rem; color: #64748b; }
+    .mode-btn.active { border-color: #DC143C; background: rgba(220,20,60,0.05); color: #DC143C; font-weight: 700; }
+    .mode-btn:hover:not(.active) { border-color: #D4C9A8; background: #F5F3DC; }
+    .drop-zone { border: 2px dashed #E8E4C8; border-radius: 0.5rem; padding: 2.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .drop-zone:hover { border-color: #D4C9A8; background: rgba(245,243,220,0.5); }
+    .step-dot { width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+    .bubble-legacy { background: #F0EAD6; border: 1px solid #D4C9A8; color: #5C4A2A; border-radius: 0 0.5rem 0.5rem 0.5rem; padding: 0.875rem 1.1rem; font-family: 'Playfair Display', serif; font-size: 0.875rem; line-height: 1.7; max-width: 78%; }
+    .bubble-user { background: #1E293B; color: white; border-radius: 0.5rem 0 0.5rem 0.5rem; padding: 0.875rem 1.1rem; font-size: 0.875rem; line-height: 1.65; max-width: 78%; }
+    .tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.375rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .tab-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.08); color: #1E293B; }
+    .tab-btn:not(.active) { background: transparent; color: #94a3b8; }
+    .select-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.75rem; border: 1px solid #E8E4C8; border-radius: 0.375rem; background: white; font-size: 0.875rem; color: #1E293B; cursor: pointer; }
+    .select-btn:hover { background: #F5F3DC; }
+    .arena-msg-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+    .arena-avatar { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; flex-shrink: 0; margin-top: 0.25rem; }
+    .role-btn { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #E8E4C8; background: white; text-align: left; cursor: pointer; transition: all 0.15s; }
+    .role-btn.active { border-color: #DC143C; background: rgba(220,20,60,0.04); }
+    .role-btn:hover:not(.active) { border-color: #cbd5e1; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.18s ease; }
+  </style>
+</head>
+<body class="min-h-screen" onclick="closeMenus(event)">
+
+<!-- HEADER -->
+<header id="main-header" style="border-bottom:1px solid #E8E4C8;background:rgba(253,252,240,0.95);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;display:none;">
+  <div style="max-width:72rem;margin:0 auto;padding:0 1.5rem;height:3.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div style="width:2rem;height:2rem;border-radius:0.25rem;background:#DC143C;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-weight:600;font-size:0.875rem;color:#1E293B;line-height:1;">The Legacy Project Architect</div>
+        <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">Williamsburg Academy</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="new-sim-btn" onclick="resetArena()" style="display:none;font-size:0.75rem;color:#64748b;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#DC143C'" onmouseout="this.style.color='#64748b'">← New Simulation</button>
+      <a style="font-size:0.75rem;color:#94a3b8;text-decoration:none;" href="#">Academy</a>
+      <!-- User avatar button -->
+      <div style="position:relative;">
+        <button id="user-menu-btn" onclick="toggleUserMenu(event)" style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0.625rem;border:1px solid #E8E4C8;border-radius:0.5rem;background:white;cursor:pointer;font-size:0.8rem;color:#374151;" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='#E8E4C8'">
+          <div id="user-avatar" style="width:1.5rem;height:1.5rem;border-radius:9999px;background:#DC143C;color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;"></div>
+          <span id="user-name-header" style="font-weight:500;"></span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <!-- Dropdown -->
+        <div id="user-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 8px);width:17rem;background:#FDFCF0;border:1px solid #E8E4C8;border-radius:0.75rem;box-shadow:0 8px 32px rgba(92,74,42,0.16);overflow:hidden;z-index:50;" class="fade-in">
+          <!-- Profile row -->
+          <div style="padding:0.875rem 1rem;border-bottom:1px solid #E8E4C8;display:flex;align-items:center;gap:0.75rem;">
+            <div id="user-avatar-lg" style="width:2.25rem;height:2.25rem;border-radius:9999px;background:#DC143C;color:white;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:700;flex-shrink:0;"></div>
+            <div>
+              <div id="user-name-dd" style="font-size:0.875rem;font-weight:600;color:#1E293B;"></div>
+              <div id="user-role-dd" style="font-size:0.7rem;color:#94a3b8;"></div>
+            </div>
+          </div>
+          <!-- History toggle -->
+          <button onclick="toggleHistory(event)" style="width:100%;display:flex;align-items:center;gap:0.5rem;padding:0.625rem 1rem;border:none;background:none;cursor:pointer;font-size:0.75rem;color:#374151;" onmouseover="this.style.background='#F5F3DC'" onmouseout="this.style.background='none'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Debate History</span>
+            <span id="history-count" style="margin-left:auto;background:rgba(220,20,60,0.12);color:#DC143C;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:9999px;"></span>
+          </button>
+          <!-- History list -->
+          <div id="history-list" style="display:none;border-top:1px solid #E8E4C8;max-height:12rem;overflow-y:auto;"></div>
+          <!-- Sign out -->
+          <div style="border-top:1px solid #E8E4C8;">
+            <button onclick="signOut()" style="width:100%;display:flex;align-items:center;gap:0.5rem;padding:0.625rem 1rem;border:none;background:none;cursor:pointer;font-size:0.75rem;color:#64748b;" onmouseover="this.style.color='#DC143C';this.style.background='rgba(220,20,60,0.04)'" onmouseout="this.style.color='#64748b';this.style.background='none'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out &amp; clear profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- AUTH STAGE -->
+<div id="stage-auth" style="display:none;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background-image:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(180,160,100,0.04) 28px,rgba(180,160,100,0.04) 29px);">
+  <div style="width:100%;max-width:26rem;">
+    <!-- Logo -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:2rem;">
+      <div style="width:3rem;height:3rem;border-radius:0.625rem;background:#DC143C;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;box-shadow:0 4px 16px rgba(220,20,60,0.3);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:#1E293B;">The Legacy Project</div>
+      <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.25rem;">Williamsburg Academy</div>
+    </div>
+
+    <!-- Card -->
+    <div class="parchment-card" style="padding:2rem;border-radius:0.875rem;">
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:600;color:#1E293B;margin-bottom:0.375rem;">Create your profile</h2>
+        <p style="font-size:0.8rem;color:#64748b;line-height:1.55;">Your name and role will appear in your debate transcripts and be saved locally on this device.</p>
+      </div>
+
+      <!-- Name field -->
+      <div style="margin-bottom:1.25rem;">
+        <span class="legacy-label">Your Name</span>
+        <div style="position:relative;">
+          <svg style="position:absolute;left:0.625rem;top:50%;transform:translateY(-50%);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input class="legacy-input" id="auth-name" type="text" placeholder="e.g. Alex Johnson" maxlength="60" style="padding-left:2.25rem;" oninput="clearAuthError()" onkeydown="if(event.key==='Enter')submitAuth()" />
+        </div>
+        <p id="auth-error" style="display:none;font-size:0.72rem;color:#DC143C;margin-top:0.35rem;"></p>
+      </div>
+
+      <!-- Role selector -->
+      <div style="margin-bottom:1.5rem;">
+        <span class="legacy-label">Your Role</span>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <button class="role-btn active" id="role-student" onclick="selectRole('student')" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#DC143C" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <div>
+              <div style="font-size:0.8rem;font-weight:600;color:#1E293B;line-height:1.2;">Student</div>
+              <div style="font-size:0.7rem;color:#94a3b8;">I'm here to debate and learn</div>
+            </div>
+            <div id="radio-student" style="margin-left:auto;width:1rem;height:1rem;border-radius:9999px;border:2px solid #DC143C;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:0.5rem;height:0.5rem;border-radius:9999px;background:#DC143C;"></div></div>
+          </button>
+          <button class="role-btn" id="role-teacher" onclick="selectRole('teacher')" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <div>
+              <div style="font-size:0.8rem;font-weight:600;color:#1E293B;line-height:1.2;">Teacher</div>
+              <div style="font-size:0.7rem;color:#94a3b8;">I'm facilitating a class session</div>
+            </div>
+            <div id="radio-teacher" style="margin-left:auto;width:1rem;height:1rem;border-radius:9999px;border:2px solid #E8E4C8;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+          </button>
+          <button class="role-btn" id="role-administrator" onclick="selectRole('administrator')" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div>
+              <div style="font-size:0.8rem;font-weight:600;color:#1E293B;line-height:1.2;">Administrator</div>
+              <div style="font-size:0.7rem;color:#94a3b8;">I'm managing the platform</div>
+            </div>
+            <div id="radio-administrator" style="margin-left:auto;width:1rem;height:1rem;border-radius:9999px;border:2px solid #E8E4C8;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-crimson" onclick="submitAuth()" style="width:100%;justify-content:center;font-size:0.875rem;padding:0.75rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
+        Enter the Archive
+      </button>
+    </div>
+
+    <p style="text-align:center;font-size:0.7rem;color:#94a3b8;margin-top:0.875rem;">Your profile is saved locally on this device only — no account or password required.</p>
+  </div>
+</div>
+
+<!-- MAIN APP (configure + simulate) -->
+<div id="stage-app" style="display:none;">
+  <main id="app-root" style="max-width:72rem;margin:0 auto;padding:2rem 1.5rem;">
+
+    <!-- CONFIGURE STAGE -->
+    <div id="stage-configure">
+      <!-- Hero -->
+      <div style="text-align:center;margin-bottom:2.5rem;">
+        <div style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.25rem 0.75rem;border-radius:9999px;background:rgba(220,20,60,0.1);color:#DC143C;font-size:0.72rem;font-weight:700;margin-bottom:1rem;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Historical Simulation Engine
+        </div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:700;color:#1E293B;line-height:1.15;margin-bottom:0.75rem;">
+          Summon the Wisdom<br><span style="color:#DC143C;">of the Ages</span>
+        </h1>
+        <p id="welcome-line" style="font-size:0.85rem;color:#94a3b8;margin-bottom:0.5rem;display:none;"></p>
+        <p style="color:#64748b;max-width:34rem;margin:0 auto;font-size:0.95rem;line-height:1.65;">
+          Upload your curriculum, choose a classical figure, and watch Socrates debate social media privacy — or let Washington weigh in on political polarization.
+        </p>
+      </div>
+
+      <!-- Step indicators -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="step-dot" style="background:#DC143C;color:white;" id="step1-dot">1</div>
+          <span style="font-size:0.75rem;color:#64748b;">Ingest Curriculum</span>
+        </div>
+        <div style="width:2rem;height:1px;background:#E8E4C8;margin:0 0.25rem;"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="step-dot" id="step2-dot" style="background:#E8E4C8;color:#94a3b8;">2</div>
+          <span style="font-size:0.75rem;color:#64748b;">Stitch Persona</span>
+        </div>
+        <div style="width:2rem;height:1px;background:#E8E4C8;margin:0 0.25rem;"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="step-dot" style="background:#E8E4C8;color:#94a3b8;">3</div>
+          <span style="font-size:0.75rem;color:#64748b;">Enter the Arena</span>
+        </div>
+      </div>
+
+      <!-- Two-column panels -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+        <!-- CurriculumIngestor -->
+        <div class="parchment-card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+            <div style="width:2.25rem;height:2.25rem;border-radius:9999px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC143C" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div>
+              <h2 style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:#1E293B;">Curriculum Ingestor</h2>
+              <p style="font-size:0.72rem;color:#94a3b8;">Grounding layer — the source of historical truth</p>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="display:flex;gap:0.25rem;background:#F5F3DC;border-radius:0.375rem;padding:0.25rem;margin-bottom:1.25rem;">
+            <button class="tab-btn active" id="tab-upload" onclick="switchTab('upload')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              Upload File
+            </button>
+            <button class="tab-btn" id="tab-paste" onclick="switchTab('paste')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              Paste Text
+            </button>
+          </div>
+
+          <!-- Upload panel -->
+          <div id="panel-upload">
+            <div class="drop-zone" id="drop-zone" onclick="simulateUpload()" ondragover="event.preventDefault();this.style.borderColor='#DC143C';this.style.background='rgba(220,20,60,0.04)'" ondragleave="this.style.borderColor='';this.style.background=''" ondrop="handleDrop(event)">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              <div style="text-align:center;">
+                <p style="font-size:0.875rem;font-weight:500;color:#374151;">Drop a file or click to browse</p>
+                <p style="font-size:0.72rem;color:#94a3b8;margin-top:0.25rem;">TXT, MD — up to 5 MB</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paste panel -->
+          <div id="panel-paste" style="display:none;">
+            <textarea class="legacy-input" id="paste-textarea" rows="6" placeholder="Paste a lecture transcript, chapter excerpt, primary source document, or any curriculum text here…" style="resize:vertical;line-height:1.6;"></textarea>
+            <button class="btn-crimson" style="width:100%;justify-content:center;margin-top:0.75rem;" onclick="ingestPaste()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              Ingest Curriculum Text
+            </button>
+          </div>
+
+          <!-- Success badge -->
+          <div id="curriculum-success" style="display:none;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.375rem;margin-top:0;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span style="font-size:0.8rem;font-weight:600;color:#166534;" id="curriculum-name">Document ingested</span>
+              <span style="font-size:0.7rem;color:#16a34a;" id="curriculum-size"></span>
+            </div>
+            <button onclick="clearCurriculum()" style="background:none;border:none;cursor:pointer;color:#16a34a;" title="Clear">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </button>
+          </div>
+
+          <p style="margin-top:1rem;font-size:0.7rem;color:#94a3b8;text-align:center;" id="curriculum-hint">
+            The AI will treat this document as its primary source of truth during the simulation.
+          </p>
+        </div>
+
+        <!-- PersonaStitcher -->
+        <div class="parchment-card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+            <div style="width:2.25rem;height:2.25rem;border-radius:9999px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC143C" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div>
+              <h2 style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:#1E293B;">Persona Stitcher</h2>
+              <p style="font-size:0.72rem;color:#94a3b8;">Configure the simulation's historical and modern axes</p>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:1.1rem;">
+            <!-- Figure selector -->
+            <div>
+              <span class="legacy-label">Classical Figure</span>
+              <div style="position:relative;">
+                <button class="select-btn" onclick="toggleDropdown('fig-dd')" id="fig-selector">
+                  <span style="display:flex;align-items:center;gap:0.5rem;">
+                    <span id="fig-icon">⚗️</span>
+                    <span style="font-weight:500;" id="fig-name">Socrates</span>
+                    <span style="color:#94a3b8;font-size:0.72rem;" id="fig-era">470–399 BC</span>
+                  </span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="fig-dd" style="display:none;position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;background:white;border:1px solid #E8E4C8;border-radius:0.375rem;box-shadow:0 8px 32px rgba(92,74,42,0.14);max-height:16rem;overflow-y:auto;"></div>
+              </div>
+              <p style="margin-top:0.4rem;font-size:0.72rem;color:#94a3b8;font-style:italic;" id="fig-style">Socratic method — probing questions, elenchus</p>
+            </div>
+
+            <!-- Dilemma selector -->
+            <div>
+              <span class="legacy-label">Modern Dilemma</span>
+              <div style="position:relative;">
+                <button class="select-btn" onclick="toggleDropdown('dil-dd')" id="dil-selector">
+                  <span style="font-weight:500;" id="dil-label">Social Media & Privacy</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="dil-dd" style="display:none;position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;background:white;border:1px solid #E8E4C8;border-radius:0.375rem;box-shadow:0 8px 32px rgba(92,74,42,0.14);max-height:16rem;overflow-y:auto;"></div>
+              </div>
+              <p style="margin-top:0.4rem;font-size:0.72rem;color:#94a3b8;" id="dil-desc">Should individuals sacrifice privacy for social connection and convenience?</p>
+            </div>
+
+            <!-- Mode selector -->
+            <div>
+              <span class="legacy-label">Simulation Mode</span>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
+                <button class="mode-btn" id="mode-solo" onclick="setMode('solo')">
+                  <div>📜</div><div style="font-weight:700;margin-top:0.25rem;">Sage Speaks</div>
+                </button>
+                <button class="mode-btn active" id="mode-debate" onclick="setMode('debate')">
+                  <div>⚔️</div><div style="font-weight:700;margin-top:0.25rem;">Student Debates</div>
+                </button>
+                <button class="mode-btn" id="mode-dual" onclick="setMode('dual')">
+                  <div>👥</div><div style="font-weight:700;margin-top:0.25rem;">Dual-Persona</div>
+                </button>
+              </div>
+              <p style="margin-top:0.4rem;font-size:0.72rem;color:#94a3b8;">You take on a role and debate the historical figure directly.</p>
+            </div>
+
+            <!-- Student name -->
+            <div id="debate-name-row">
+              <span class="legacy-label">Your Name / Role</span>
+              <input class="legacy-input" id="debate-name-input" placeholder="e.g. Alexis, a modern senator…" />
+            </div>
+
+            <!-- Launch -->
+            <button class="btn-crimson" style="width:100%;justify-content:center;font-size:0.875rem;" onclick="launchArena()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Stitch Persona &amp; Enter the Arena
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p style="text-align:center;font-size:0.7rem;color:#94a3b8;margin-top:1.5rem;">
+        Curriculum upload is optional — the AI will use its own historical knowledge if none is provided.
+      </p>
+    </div>
+
+    <!-- SIMULATE STAGE -->
+    <div id="stage-simulate" style="display:none;flex-direction:column;gap:1rem;">
+      <!-- Breadcrumb -->
+      <div class="parchment-card" style="padding:0.625rem 1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;font-size:0.75rem;color:#64748b;">
+        <span style="font-weight:600;color:#1E293B;" id="arena-fig-label"></span>
+        <span style="color:#cbd5e1;">·</span>
+        <span>on</span>
+        <span style="font-weight:500;color:#DC143C;" id="arena-dil-label"></span>
+        <span style="color:#cbd5e1;">·</span>
+        <span id="arena-mode-label"></span>
+        <span id="arena-curriculum-badge" style="display:none;align-items:center;gap:0.3rem;color:#16a34a;font-weight:500;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Grounded
+        </span>
+        <span id="arena-user-badge" style="display:none;align-items:center;gap:0.3rem;color:#64748b;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span id="arena-user-name"></span>
+        </span>
+      </div>
+
+      <!-- Arena card -->
+      <div style="display:flex;flex-direction:column;border:1px solid #E8E4C8;border-radius:0.5rem;overflow:hidden;box-shadow:0 4px 24px rgba(92,74,42,0.12);">
+        <!-- Arena header -->
+        <div class="parchment-card" style="border-radius:0;border-left:none;border-right:none;border-top:none;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:2rem;height:2rem;border-radius:9999px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DC143C" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-weight:600;font-size:0.95rem;color:#1E293B;" id="arena-header-fig">Legacy Arena</div>
+              <div style="font-size:0.7rem;color:#94a3b8;">Williamsburg Academy · Historical Simulation</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <button class="btn-outline" title="Export transcript" onclick="exportTranscript()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button class="btn-outline" onclick="resetArena()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.62"/></svg>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Message feed -->
+        <div id="arena-feed" style="flex:1;min-height:380px;max-height:420px;overflow-y:auto;padding:1.25rem;background:#FDFCF0;background-image:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(180,160,100,0.04) 28px,rgba(180,160,100,0.04) 29px);"></div>
+
+        <!-- Typing indicator -->
+        <div id="typing-indicator" style="display:none;padding:0.75rem 1.25rem;align-items:center;gap:0.75rem;background:#FDFCF0;border-top:1px solid #E8E4C8;">
+          <div style="width:1.75rem;height:1.75rem;border-radius:9999px;background:#F0EAD6;border:1px solid #D4C9A8;display:flex;align-items:center;justify-content:center;font-size:0.8rem;">📜</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <svg style="animation:spin 1s linear infinite;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC143C" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <span style="font-size:0.75rem;color:#94a3b8;font-style:italic;font-family:'Playfair Display',serif;">Composing a response…</span>
+          </div>
+        </div>
+
+        <!-- Input row -->
+        <div id="arena-input-row" style="padding:0.75rem 1rem;background:#FDFCF0;border-top:1px solid #E8E4C8;display:flex;gap:0.75rem;align-items:flex-end;">
+          <textarea id="arena-input" class="legacy-input" rows="2" style="resize:none;flex:1;line-height:1.55;font-size:0.875rem;" placeholder="Student: Challenge the figure's position…" onkeydown="handleArenaKey(event)"></textarea>
+          <button class="btn-crimson" style="padding:0.625rem 0.875rem;flex-shrink:0;" onclick="sendMessage()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid #E8E4C8;padding:1.25rem 0;margin-top:2rem;">
+    <div style="max-width:72rem;margin:0 auto;padding:0 1.5rem;display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:#94a3b8;flex-wrap:wrap;gap:0.5rem;">
+      <p>© 2026 Williamsburg Academy · The Legacy Project Architect</p>
+      <p>Powered by <span style="color:#DC143C;font-weight:500;">Gemini 1.5 Pro</span></p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const FIGURES=[
+    {icon:'⚗️',name:'Socrates',era:'470–399 BC',style:'Socratic method — probing questions, elenchus'},
+    {icon:'🏛️',name:'Marcus Tullius Cicero',era:'106–43 BC',style:'Eloquent oratory, moral duty, republican virtue'},
+    {icon:'🦅',name:'George Washington',era:'1732–1799',style:'Measured restraint, civic duty, Rules of Civility'},
+    {icon:'📐',name:'Aristotle',era:'384–322 BC',style:'Systematic reasoning, eudaimonia, the golden mean'},
+    {icon:'⚖️',name:'Abraham Lincoln',era:'1809–1865',style:'Plain-spoken moral clarity, biblical cadence'},
+    {icon:'🌿',name:'Marcus Aurelius',era:'121–180 AD',style:'Stoic introspection, meditative prose'},
+    {icon:'⭐',name:'Harriet Tubman',era:'1822–1913',style:'Resolute faith, pragmatic heroism'},
+    {icon:'✍️',name:'Custom Figure',era:'Any era',style:'Describe below'},
+  ];
+  const DILEMMAS=[
+    {label:'Social Media & Privacy',desc:'Should individuals sacrifice privacy for social connection and convenience?'},
+    {label:'Artificial Intelligence & Ethics',desc:'How should society govern AI that can reason, create, and deceive?'},
+    {label:'Political Polarization',desc:'How do citizens maintain civic virtue when discourse collapses into tribalism?'},
+    {label:'Climate & Intergenerational Duty',desc:'What moral obligations do present leaders owe to future generations?'},
+    {label:'Cancel Culture & Redemption',desc:'Can a just society punish speech without silencing the pursuit of truth?'},
+    {label:'Economic Inequality',desc:'Is extreme wealth compatible with a virtuous republic?'},
+    {label:'Misinformation & Truth',desc:'Who bears responsibility for the spread of falsehoods in a free society?'},
+    {label:'Custom Dilemma',desc:'Define your own contemporary challenge.'},
+  ];
+  const ROLE_LABELS = { student:'Student', teacher:'Teacher', administrator:'Administrator' };
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let selectedFig=0, selectedDilemma=0, selectedMode='debate';
+  let curriculumIngested=false, curriculumText='';
+  let currentUser=null, debateHistory=[], arenaMessageCount=0, isLoading=false;
+  let selectedRole='student';
+
+  // ── User store ────────────────────────────────────────────────────────────
+  function loadUserStore(){
+    try { currentUser=JSON.parse(localStorage.getItem('legacy_user')); } catch {}
+    try { debateHistory=JSON.parse(localStorage.getItem('legacy_history'))||[]; } catch {}
+  }
+  function persistUser(u){ localStorage.setItem('legacy_user',JSON.stringify(u)); }
+  function persistHistory(){ localStorage.setItem('legacy_history',JSON.stringify(debateHistory)); }
+  function addHistoryRecord(rec){
+    rec.id=crypto.randomUUID(); rec.date=new Date().toISOString();
+    debateHistory=[rec,...debateHistory].slice(0,50);
+    persistHistory();
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function selectRole(role){
+    selectedRole=role;
+    ['student','teacher','administrator'].forEach(r=>{
+      const btn=document.getElementById('role-'+r);
+      const radio=document.getElementById('radio-'+r);
+      const svg=btn.querySelector('svg');
+      if(r===role){
+        btn.classList.add('active');
+        radio.innerHTML='<div style="width:0.5rem;height:0.5rem;border-radius:9999px;background:#DC143C;"></div>';
+        radio.style.borderColor='#DC143C';
+        svg.style.stroke='#DC143C';
+      } else {
+        btn.classList.remove('active');
+        radio.innerHTML='';
+        radio.style.borderColor='#E8E4C8';
+        svg.style.stroke='#94a3b8';
+      }
+    });
+  }
+  function clearAuthError(){ document.getElementById('auth-error').style.display='none'; }
+  function submitAuth(){
+    const name=document.getElementById('auth-name').value.trim();
+    if(!name||name.length<2){
+      const err=document.getElementById('auth-error');
+      err.textContent=name?'Name must be at least 2 characters.':'Please enter your name to continue.';
+      err.style.display='block';
+      return;
+    }
+    currentUser={id:crypto.randomUUID(),name,role:selectedRole,createdAt:new Date().toISOString()};
+    persistUser(currentUser);
+    showApp();
+  }
+  function signOut(){
+    localStorage.removeItem('legacy_user');
+    localStorage.removeItem('legacy_history');
+    currentUser=null; debateHistory=[];
+    document.getElementById('user-dropdown').style.display='none';
+    document.getElementById('stage-app').style.display='none';
+    document.getElementById('main-header').style.display='none';
+    document.getElementById('stage-auth').style.display='flex';
+    document.getElementById('auth-name').value='';
+    selectRole('student');
+  }
+
+  // ── Show/hide stages ──────────────────────────────────────────────────────
+  function showAuth(){
+    document.getElementById('stage-auth').style.display='flex';
+    document.getElementById('stage-app').style.display='none';
+    document.getElementById('main-header').style.display='none';
+  }
+  function showApp(){
+    document.getElementById('stage-auth').style.display='none';
+    document.getElementById('stage-app').style.display='block';
+    document.getElementById('main-header').style.display='block';
+    updateUserUI();
+    showConfigure();
+  }
+  function showConfigure(){
+    document.getElementById('stage-configure').style.display='block';
+    document.getElementById('stage-simulate').style.display='none';
+    document.getElementById('new-sim-btn').style.display='none';
+    // Pre-fill student name from user profile
+    if(currentUser && !document.getElementById('debate-name-input').value){
+      document.getElementById('debate-name-input').value=currentUser.name;
+    }
+  }
+
+  // ── User UI ───────────────────────────────────────────────────────────────
+  function updateUserUI(){
+    if(!currentUser)return;
+    const initial=currentUser.name.charAt(0).toUpperCase();
+    document.getElementById('user-avatar').textContent=initial;
+    document.getElementById('user-avatar-lg').textContent=initial;
+    document.getElementById('user-name-header').textContent=currentUser.name;
+    document.getElementById('user-name-dd').textContent=currentUser.name;
+    document.getElementById('user-role-dd').textContent=ROLE_LABELS[currentUser.role]||currentUser.role;
+    // Welcome line
+    const wl=document.getElementById('welcome-line');
+    const histCount=debateHistory.length;
+    wl.innerHTML='Welcome back, <strong style="color:#1E293B;">'+currentUser.name+'</strong>'+(histCount>0?' · <span style="color:#DC143C;">'+histCount+' debate'+(histCount!==1?'s':'')+' on record</span>':'');
+    wl.style.display='block';
+    updateHistoryCount();
+  }
+  function updateHistoryCount(){
+    document.getElementById('history-count').textContent=debateHistory.length;
+  }
+  function toggleUserMenu(e){
+    e.stopPropagation();
+    const dd=document.getElementById('user-dropdown');
+    dd.style.display=dd.style.display==='none'?'block':'none';
+  }
+  function toggleHistory(e){
+    e.stopPropagation();
+    const list=document.getElementById('history-list');
+    const isHidden=list.style.display==='none';
+    list.style.display=isHidden?'block':'none';
+    if(isHidden) renderHistoryList();
+  }
+  function renderHistoryList(){
+    const list=document.getElementById('history-list');
+    if(debateHistory.length===0){
+      list.innerHTML='<div style="padding:0.75rem 1rem;font-size:0.72rem;color:#94a3b8;font-style:italic;">No debates yet — enter the arena to begin.</div>';
+      return;
+    }
+    const MODE_LABELS={solo:'Sage Speaks',debate:'Student Debates',dual:'Dual-Persona'};
+    list.innerHTML=debateHistory.map(r=>`
+      <div style="padding:0.5rem 1rem;border-bottom:1px solid #E8E4C8;">
+        <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;">
+          <span>${r.figureIcon}</span>
+          <span style="font-weight:600;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:10rem;">${r.figureName}</span>
+        </div>
+        <div style="font-size:0.7rem;color:#64748b;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.dilemma}</div>
+        <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px;">${MODE_LABELS[r.mode]||r.mode} · ${r.messageCount} msgs · ${new Date(r.date).toLocaleDateString()}</div>
+      </div>
+    `).join('');
+  }
+  function closeMenus(e){
+    if(!e.target.closest('#user-menu-btn')&&!e.target.closest('#user-dropdown')){
+      document.getElementById('user-dropdown').style.display='none';
+    }
+    if(!e.target.closest('#fig-selector')&&!e.target.closest('#fig-dd')) document.getElementById('fig-dd').style.display='none';
+    if(!e.target.closest('#dil-selector')&&!e.target.closest('#dil-dd')) document.getElementById('dil-dd').style.display='none';
+  }
+
+  // ── Dropdowns ─────────────────────────────────────────────────────────────
+  function renderFigDropdown(){
+    document.getElementById('fig-dd').innerHTML=FIGURES.map((f,i)=>`<button onclick="selectFig(${i})" style="width:100%;display:flex;align-items:flex-start;gap:0.75rem;padding:0.625rem 0.75rem;background:${i===selectedFig?'rgba(220,20,60,0.05)':'transparent'};border:none;cursor:pointer;text-align:left;" onmouseover="this.style.background='#F5F3DC'" onmouseout="this.style.background='${i===selectedFig?'rgba(220,20,60,0.05)':'transparent'}'"><span style="font-size:1.1rem;margin-top:2px;">${f.icon}</span><div><div style="font-size:0.875rem;font-weight:500;color:#1E293B;">${f.name}</div><div style="font-size:0.7rem;color:#94a3b8;">${f.era}</div></div></button>`).join('');
+  }
+  function renderDilDropdown(){
+    document.getElementById('dil-dd').innerHTML=DILEMMAS.map((d,i)=>`<button onclick="selectDil(${i})" style="width:100%;display:flex;flex-direction:column;gap:2px;padding:0.625rem 0.75rem;background:${i===selectedDilemma?'rgba(220,20,60,0.05)':'transparent'};border:none;cursor:pointer;text-align:left;" onmouseover="this.style.background='#F5F3DC'" onmouseout="this.style.background='${i===selectedDilemma?'rgba(220,20,60,0.05)':'transparent'}'"><span style="font-size:0.875rem;font-weight:500;color:#1E293B;">${d.label}</span><span style="font-size:0.7rem;color:#94a3b8;">${d.desc}</span></button>`).join('');
+  }
+  function selectFig(i){selectedFig=i;const f=FIGURES[i];document.getElementById('fig-icon').textContent=f.icon;document.getElementById('fig-name').textContent=f.name;document.getElementById('fig-era').textContent=f.era;document.getElementById('fig-style').textContent=f.style;document.getElementById('fig-dd').style.display='none';}
+  function selectDil(i){selectedDilemma=i;const d=DILEMMAS[i];document.getElementById('dil-label').textContent=d.label;document.getElementById('dil-desc').textContent=d.desc;document.getElementById('dil-dd').style.display='none';}
+  function toggleDropdown(id){const dd=document.getElementById(id);const isOpen=dd.style.display!=='none';['fig-dd','dil-dd'].forEach(e=>document.getElementById(e).style.display='none');if(!isOpen){dd.style.display='block';if(id==='fig-dd')renderFigDropdown();else renderDilDropdown();}}
+  function setMode(m){selectedMode=m;['solo','debate','dual'].forEach(id=>{document.getElementById('mode-'+id).className='mode-btn'+(id===m?' active':'');});document.getElementById('debate-name-row').style.display=m==='debate'?'block':'none';}
+
+  // ── Curriculum ────────────────────────────────────────────────────────────
+  function switchTab(t){document.getElementById('tab-upload').className='tab-btn'+(t==='upload'?' active':'');document.getElementById('tab-paste').className='tab-btn'+(t==='paste'?' active':'');document.getElementById('panel-upload').style.display=t==='upload'?'block':'none';document.getElementById('panel-paste').style.display=t==='paste'?'block':'none';}
+  function simulateUpload(){
+    const demoText="THE REPUBLIC — PLATO\n\nBook I: The Challenge of Justice\n\nSocrates, Glaucon, Thrasymachus, and Polemarchus gather at the house of Cephalus in Piraeus. The dialogue opens with a discussion of what justice truly means — whether it is paying one's debts, helping friends and harming enemies, or as Thrasymachus provocatively claims, simply the advantage of the stronger.\n\nSocrates dismantles each definition through careful questioning, demonstrating that justice cannot be reduced to mere convention or power.";
+    curriculumText=demoText; curriculumIngested=true;
+    document.getElementById('drop-zone').style.display='none';
+    const suc=document.getElementById('curriculum-success'); suc.style.display='flex';
+    document.getElementById('curriculum-name').textContent='Plato - The Republic (demo)';
+    document.getElementById('curriculum-size').textContent='(0.5k chars)';
+    document.getElementById('curriculum-hint').style.display='none';
+    document.getElementById('step1-dot').style.background='#16a34a'; document.getElementById('step1-dot').textContent='✓';
+    document.getElementById('step2-dot').style.background='#DC143C'; document.getElementById('step2-dot').style.color='white';
+  }
+  function handleDrop(e){e.preventDefault();document.getElementById('drop-zone').style.borderColor='';document.getElementById('drop-zone').style.background='';simulateUpload();}
+  function ingestPaste(){const t=document.getElementById('paste-textarea').value.trim();if(!t)return;curriculumText=t;curriculumIngested=true;document.getElementById('panel-paste').style.display='none';const suc=document.getElementById('curriculum-success');suc.style.display='flex';document.getElementById('curriculum-name').textContent='Pasted transcript';document.getElementById('curriculum-size').textContent='('+Math.round(t.length/100)/10+'k chars)';document.getElementById('curriculum-hint').style.display='none';document.getElementById('step1-dot').style.background='#16a34a';document.getElementById('step1-dot').textContent='✓';document.getElementById('step2-dot').style.background='#DC143C';document.getElementById('step2-dot').style.color='white';}
+  function clearCurriculum(){curriculumIngested=false;curriculumText='';document.getElementById('curriculum-success').style.display='none';document.getElementById('drop-zone').style.display='flex';document.getElementById('curriculum-hint').style.display='block';document.getElementById('step1-dot').style.background='#DC143C';document.getElementById('step1-dot').textContent='1';document.getElementById('paste-textarea').value='';}
+
+  // ── Arena ─────────────────────────────────────────────────────────────────
+  function launchArena(){
+    document.getElementById('stage-configure').style.display='none';
+    document.getElementById('stage-simulate').style.display='flex';
+    document.getElementById('new-sim-btn').style.display='block';
+    arenaMessageCount=0;
+    const fig=FIGURES[selectedFig], dil=DILEMMAS[selectedDilemma];
+    document.getElementById('arena-fig-label').textContent=fig.icon+' '+fig.name;
+    document.getElementById('arena-dil-label').textContent=dil.label;
+    document.getElementById('arena-mode-label').textContent=selectedMode==='solo'?'Sage Speaks':selectedMode==='debate'?'Student Debates':'Dual-Persona';
+    if(curriculumIngested) document.getElementById('arena-curriculum-badge').style.display='inline-flex';
+    document.getElementById('arena-input-row').style.display=selectedMode==='solo'?'none':'flex';
+    const studentLabel=document.getElementById('debate-name-input').value||currentUser?.name||'Student';
+    document.getElementById('arena-input').placeholder=studentLabel+': Challenge '+fig.name+"'s position…";
+    if(currentUser){ document.getElementById('arena-user-badge').style.display='inline-flex'; document.getElementById('arena-user-name').textContent=currentUser.name; }
+    document.getElementById('arena-feed').innerHTML='';
+    addArenaMsg('system','','The arena is open. '+fig.name+' stands ready to address the question of '+dil.label+'.');
+    setTimeout(()=>{
+      showTyping();
+      setTimeout(()=>{
+        hideTyping();
+        const openings={
+          0:`Citizens and seekers of truth, you ask me to weigh in upon the matter of ${dil.label}. I confess, I know nothing — and yet it is precisely this admission that grants us entry into genuine inquiry. Tell me: when a man surrenders his innermost thoughts to a platform of commerce, trading his privacy for the mere appearance of connection — is he not, in the deepest sense, surrendering his very soul to the cave of shadows?\n\nFor what is privacy but the sacred chamber in which the unexamined life might, at last, begin to examine itself? The marketplace demands your attention; the algorithm craves your soul. I ask you: which master do you serve?`,
+          1:`Fellow citizens, Senatus Populusque Romanus demands of us a reckoning. The question of ${dil.label} is not merely one of policy, but of *officium* — of duty. A republic endures not through its laws alone, but through the moral fiber of those who inhabit its institutions.\n\nI have argued in the Forum that a free man's greatest inheritance is not gold, but *dignitas*. When we allow the powerful to obscure truth from the many, we do not merely lose information — we lose the very foundation of republican virtue.`,
+          2:`In my service to this Republic, I have known the weight of decisions made under fire, when principle and expediency stand in sharp opposition. The matter before us — ${dil.label} — is no different. A leader's character is revealed not in moments of comfort, but in these precise crucibles.\n\nMy Rules of Civility taught me that we must govern ourselves before we may govern others. I ask you now: what manner of self-governance does our age demand?`,
+        };
+        const txt=openings[selectedFig]||`I stand before you to address the matter of ${dil.label}. Let us reason together, drawing upon the lessons of history, to illuminate a path forward worthy of those who cherish both knowledge and virtue.`;
+        addArenaMsg('legacy',fig.icon+' '+fig.name,txt);
+      },2200);
+    },600);
+  }
+  function addArenaMsg(role,speaker,content){
+    const feed=document.getElementById('arena-feed');
+    const isUser=role==='user', isSystem=role==='system', isLegacyB=role==='legacy-b';
+    if(isSystem){
+      feed.innerHTML+=`<div style="text-align:center;margin:0.5rem 0;"><span style="font-size:0.75rem;color:rgba(92,74,42,0.5);font-style:italic;font-family:'Playfair Display',serif;">${content}</span></div>`;
+    } else {
+      if(isUser||role==='legacy') arenaMessageCount++;
+      feed.innerHTML+=`<div class="arena-msg-row" style="${isUser?'flex-direction:row-reverse;':''}">
+        <div class="arena-avatar" style="${isUser?'background:#1E293B;color:white;':isLegacyB?'background:#fef3c7;border:1px solid #fcd34d;':'background:#F0EAD6;border:1px solid #D4C9A8;'}">${isUser?speaker.charAt(0).toUpperCase():'📜'}</div>
+        <div style="display:flex;flex-direction:column;gap:0.25rem;max-width:78%;${isUser?'align-items:flex-end;':'align-items:flex-start;'}">
+          <span style="font-size:0.7rem;font-weight:600;color:#94a3b8;padding:0 0.25rem;">${speaker}</span>
+          <div class="${isUser?'bubble-user':'bubble-legacy'}" style="${isLegacyB?'background:#fffbeb;border-color:#fcd34d;':''}">${content.replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<em>$1</em>')}</div>
+          <span style="font-size:0.65rem;color:#cbd5e1;padding:0 0.25rem;">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+      </div>`;
+    }
+    feed.scrollTop=feed.scrollHeight;
+  }
+  function showTyping(){document.getElementById('typing-indicator').style.display='flex';}
+  function hideTyping(){document.getElementById('typing-indicator').style.display='none';}
+  function sendMessage(){
+    if(isLoading)return;
+    const input=document.getElementById('arena-input'), txt=input.value.trim();
+    if(!txt)return;
+    const sName=document.getElementById('debate-name-input').value||currentUser?.name||'Student';
+    const fig=FIGURES[selectedFig];
+    addArenaMsg('user',sName,txt); input.value=''; isLoading=true; showTyping();
+    setTimeout(()=>{
+      hideTyping(); isLoading=false;
+      const responses=[
+        `Ah, you raise precisely the point I anticipated. Consider the allegory of the cave — what you perceive as "connection" on these digital platforms is but shadows on the wall, cast by the unseen machinations of commerce and power. The prisoner who is freed and turns to face the sun — that is the examined life. Can you say with confidence that your scrolling, your liking, your algorithmic feed represents a turn toward the sun, or a deeper descent into the shadow?\n\nAnd yet I do not condemn you, friend. Condemnation without inquiry is the sophist's tool, not the philosopher's. Tell me more: what do *you* believe you gain from this exchange of privacy?`,
+        `You speak with the boldness of youth, and that is commendable. But let us not mistake boldness for wisdom. When Thrasymachus insisted that justice was the advantage of the stronger, he too spoke with conviction — and he too was wrong.\n\nThe question is not whether technology is powerful. It is whether *we* remain virtuous in its presence. Virtue is not circumstantial; it does not bend to convenience. What is your answer?`,
+        `A fine challenge. I have faced greater ones, I confess, on the banks of the Delaware in the dead of winter, when hope itself seemed ready to surrender. Yet we did not.\n\nThe mark of character is not the absence of difficulty but the discipline of response. Your generation faces a different winter — one of distraction and disorientation. I ask: what is your plan of action?`,
+      ];
+      addArenaMsg('legacy',fig.icon+' '+fig.name,responses[selectedFig]||responses[0]);
+    },1800+Math.random()*1000);
+  }
+  function handleArenaKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+  function resetArena(){
+    // Save history record if there were messages
+    if(arenaMessageCount>0 && currentUser){
+      const fig=FIGURES[selectedFig], dil=DILEMMAS[selectedDilemma];
+      addHistoryRecord({figureIcon:fig.icon,figureName:fig.name,dilemma:dil.label,mode:selectedMode,messageCount:arenaMessageCount,grounded:curriculumIngested});
+      updateHistoryCount();
+      updateUserUI();
+    }
+    document.getElementById('stage-simulate').style.display='none';
+    document.getElementById('stage-configure').style.display='block';
+    document.getElementById('new-sim-btn').style.display='none';
+    document.getElementById('arena-feed').innerHTML='';
+    document.getElementById('arena-curriculum-badge').style.display='none';
+    document.getElementById('arena-user-badge').style.display='none';
+    curriculumIngested=false; curriculumText=''; arenaMessageCount=0;
+    document.getElementById('curriculum-success').style.display='none';
+    document.getElementById('drop-zone').style.display='flex';
+    document.getElementById('curriculum-hint').style.display='block';
+    document.getElementById('step1-dot').style.background='#DC143C'; document.getElementById('step1-dot').textContent='1';
+    document.getElementById('step2-dot').style.background='#E8E4C8'; document.getElementById('step2-dot').style.color='#94a3b8';
+  }
+  function exportTranscript(){
+    const msgs=document.querySelectorAll('#arena-feed .arena-msg-row');
+    let out='LEGACY PROJECT ARCHITECT — SIMULATION TRANSCRIPT\nWilliamsburg Academy\nGenerated: '+new Date().toLocaleString()+'\n\n---\n\n';
+    if(currentUser) out+='Participant: '+currentUser.name+' ('+ROLE_LABELS[currentUser.role]+')\n\n---\n\n';
+    msgs.forEach(m=>{const speaker=m.querySelector('span')?.textContent||'';const bubble=m.querySelector('.bubble-legacy,.bubble-user');if(bubble){out+='['+speaker.trim()+']\n'+bubble.innerText+'\n\n---\n\n';}});
+    const blob=new Blob([out],{type:'text/plain'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='legacy-simulation-'+Date.now()+'.txt';a.click();
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded',()=>{
+    loadUserStore();
+    // Init dropdowns default display
+    document.getElementById('fig-icon').textContent=FIGURES[0].icon;
+    document.getElementById('fig-name').textContent=FIGURES[0].name;
+    document.getElementById('fig-era').textContent=FIGURES[0].era;
+    document.getElementById('fig-style').textContent=FIGURES[0].style;
+    document.getElementById('dil-label').textContent=DILEMMAS[0].label;
+    document.getElementById('dil-desc').textContent=DILEMMAS[0].desc;
+
+    if(currentUser){
+      showApp();
+    } else {
+      showAuth();
+    }
+  });
+</script>
+</body>
+</html>
