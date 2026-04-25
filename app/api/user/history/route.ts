@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql, { schemaReady } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
+  await schemaReady;
   try {
     const profileId = req.nextUrl.searchParams.get("profileId");
     if (!profileId) return NextResponse.json({ error: "Missing profileId" }, { status: 400 });
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  await schemaReady;
   try {
     const { profileId, figureIcon, figureName, dilemma, mode, messageCount, grounded } =
       await req.json();

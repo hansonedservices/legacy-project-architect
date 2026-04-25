@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql from "@/lib/db";
+import sql, { schemaReady } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
+  await schemaReady;
   try {
     const { name, role } = await req.json();
     if (!name || typeof name !== "string" || name.trim().length < 2) {
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  await schemaReady;
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
