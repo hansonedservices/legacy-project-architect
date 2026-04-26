@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import type { PersonaBlueprint } from "../../../components/PersonaStitcher";
 
 interface RequestBody {
@@ -92,7 +92,6 @@ function parseGeminiDualResponse(
     return { reply: raw.trim(), speakerLabel: blueprint.figure.name };
   }
 
-  // Try to split on labeled sections
   const figName = blueprint.figure.name.toUpperCase();
   const secondName = getDualPersonaOpponent(blueprint.figure.id).toUpperCase();
 
@@ -111,7 +110,6 @@ function parseGeminiDualResponse(
     };
   }
 
-  // Fallback: split roughly in half
   const half = Math.floor(raw.length / 2);
   const splitIdx = raw.indexOf("\n\n", half);
   return {
@@ -127,7 +125,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured. Add it to your .env.local file." },
+        { error: "GEMINI_API_KEY is not configured. Add it to your environment variables." },
         { status: 500 }
       );
     }
@@ -139,28 +137,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid blueprint configuration." }, { status: 400 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: buildSystemPrompt(blueprint, curriculumText),
-    });
+    const ai = new GoogleGenAI({ apiKey });
 
     // Build conversation history for multi-turn context
     const history = messages
       .filter((m) => m.role === "user" || m.role === "legacy")
       .map((m) => ({
-        role: m.role === "user" ? ("user" as const) : ("model" as const),
+        role: m.role === "user" ? "user" : "model",
         parts: [{ text: `[${m.speakerLabel}]: ${m.content}` }],
       }));
-
-    const chat = model.startChat({
-      history,
-      generationConfig: {
-        temperature: 0.85,
-        maxOutputTokens: 1024,
-        topP: 0.95,
-      },
-    });
 
     const prompt =
       userMessage ??
@@ -168,9 +153,21 @@ export async function POST(req: NextRequest) {
         ? `As ${blueprint.figure.name}, deliver your opening statement on the question of ${blueprint.dilemma.label}. Draw upon the curriculum provided and your historical wisdom.`
         : `Begin the simulation. ${blueprint.figure.name}, address the matter of ${blueprint.dilemma.label}.`);
 
-    const result = await chat.sendMessage(prompt);
-    const rawText = result.response.text();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        ...history,
+        { role: "user", parts: [{ text: prompt }] },
+      ],
+      config: {
+        systemInstruction: buildSystemPrompt(blueprint, curriculumText),
+        temperature: 0.85,
+        maxOutputTokens: 1024,
+        topP: 0.95,
+      },
+    });
 
+    const rawText = response.text ?? "";
     const parsed = parseGeminiDualResponse(rawText, blueprint);
 
     return NextResponse.json(parsed);
