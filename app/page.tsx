@@ -332,7 +332,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
           <p>© {new Date().getFullYear()} Williamsburg Academy · The Legacy Project Architect</p>
           <p className="flex items-center gap-1">
-            Powered by <span className="text-crimson font-medium">Gemini 1.5 Pro</span>
+            Powered by <span className="text-crimson font-medium">Gemini 1.5 Flash</span>
           </p>
         </div>
       </footer>
