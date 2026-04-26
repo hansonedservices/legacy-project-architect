@@ -18,61 +18,64 @@ export interface DebateRecord {
   grounded: boolean;
 }
 
-const USER_ID_KEY = "legacy_user_id";
+const USER_KEY = "legacy_user_profile";
+const HISTORY_KEY = "legacy_debate_history";
 
-// ── Local ID persistence ───────────────────────────────────────────────────
+// ── Local persistence (no server required) ────────────────────────────────
 
 export function getLocalUserId(): string | null {
-  try { return localStorage.getItem(USER_ID_KEY); } catch { return null; }
-}
-
-function setLocalUserId(id: string): void {
-  localStorage.setItem(USER_ID_KEY, id);
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    return (JSON.parse(raw) as UserProfile).id ?? null;
+  } catch { return null; }
 }
 
 export function clearLocalUser(): void {
-  localStorage.removeItem(USER_ID_KEY);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(HISTORY_KEY);
 }
 
-// ── Remote API calls ───────────────────────────────────────────────────────
-
 export async function createProfile(name: string, role: UserRole): Promise<UserProfile> {
-  const res = await fetch("/api/user/profile", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, role }),
-  });
-  if (!res.ok) throw new Error("Failed to create profile");
-  const profile: UserProfile = await res.json();
-  setLocalUserId(profile.id);
+  const profile: UserProfile = {
+    id: crypto.randomUUID(),
+    name,
+    role,
+    createdAt: new Date().toISOString(),
+  };
+  localStorage.setItem(USER_KEY, JSON.stringify(profile));
   return profile;
 }
 
 export async function fetchProfile(id: string): Promise<UserProfile | null> {
   try {
-    const res = await fetch(`/api/user/profile?id=${id}`);
-    if (!res.ok) return null;
-    return res.json();
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    const profile = JSON.parse(raw) as UserProfile;
+    return profile.id === id ? profile : null;
   } catch { return null; }
 }
 
-export async function fetchHistory(profileId: string): Promise<DebateRecord[]> {
+export async function fetchHistory(_profileId: string): Promise<DebateRecord[]> {
   try {
-    const res = await fetch(`/api/user/history?profileId=${profileId}`);
-    if (!res.ok) return [];
-    return res.json();
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as DebateRecord[];
   } catch { return []; }
 }
 
 export async function saveDebateSession(
-  profileId: string,
+  _profileId: string,
   record: Omit<DebateRecord, "id" | "date">
 ): Promise<void> {
   try {
-    await fetch("/api/user/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, ...record }),
-    });
+    const existing = await fetchHistory("");
+    const newRecord: DebateRecord = {
+      ...record,
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+    };
+    const updated = [newRecord, ...existing].slice(0, 50);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
   } catch { /* non-blocking */ }
 }
