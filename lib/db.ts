@@ -10,7 +10,8 @@ const sql = postgres({
   max: 5,
   idle_timeout: 20,
   connect_timeout: 10,
-  family: 4, // Force IPv4 — Render free tier blocks outbound IPv6
+  // @ts-ignore — family forces IPv4; not in types but supported at runtime
+  family: 4,
 });
 
 let initialized = false;
