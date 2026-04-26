@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Feather, User, GraduationCap, BookOpen, Shield, Loader2 } from "lucide-react";
-import { createProfile, type UserProfile, type UserRole } from "@/lib/userStore";
+import { createProfile, type UserProfile, type UserRole } from "../lib/userStore";
 
 interface Props {
   onComplete: (profile: UserProfile) => void;

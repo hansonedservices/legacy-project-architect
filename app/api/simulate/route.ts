@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { PersonaBlueprint } from "@/components/PersonaStitcher";
+import type { PersonaBlueprint } from "../../../components/PersonaStitcher";
 
 interface RequestBody {
   blueprint: PersonaBlueprint;

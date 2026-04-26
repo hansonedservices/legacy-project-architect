@@ -1,1 +1,11 @@
-{"version":"0.0.1","configurations":[{"name":"legacy-project-architect","runtimeExecutable":"npm","runtimeArgs":["run","dev"],"port":3000}]}
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "legacy-project-architect",
+      "runtimeExecutable": "C:\\Users\\bhanson_sdsd\\Desktop\\Claude Code\\legacy-project-architect\\.claude\\dev-server.cmd",
+      "runtimeArgs": [],
+      "port": 3000
+    }
+  ]
+}

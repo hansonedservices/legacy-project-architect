@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { BookOpen, Feather, ChevronDown, LogOut, Clock, User } from "lucide-react";
-import CurriculumIngestor, { type CurriculumSource } from "@/components/CurriculumIngestor";
-import PersonaStitcher, { type PersonaBlueprint } from "@/components/PersonaStitcher";
-import LegacyArena from "@/components/LegacyArena";
-import UserAuth from "@/components/UserAuth";
+import CurriculumIngestor, { type CurriculumSource } from "../components/CurriculumIngestor";
+import PersonaStitcher, { type PersonaBlueprint } from "../components/PersonaStitcher";
+import LegacyArena from "../components/LegacyArena";
+import UserAuth from "../components/UserAuth";
 import {
   getLocalUserId,
   clearLocalUser,
@@ -14,7 +14,7 @@ import {
   saveDebateSession,
   type UserProfile,
   type DebateRecord,
-} from "@/lib/userStore";
+} from "../lib/userStore";
 
 type AppStage = "loading" | "auth" | "configure" | "simulate";
 

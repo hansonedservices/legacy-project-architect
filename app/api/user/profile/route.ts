@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import sql, { ensureSchema } from "@/lib/db";
+import sql, { ensureSchema } from "../../../../lib/db";
 
 export async function POST(req: NextRequest) {
   await ensureSchema();
