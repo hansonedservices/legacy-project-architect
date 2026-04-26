@@ -1,5 +1,6 @@
 import postgres from "postgres";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sql = postgres({
   host: process.env.DB_HOST!,
   port: 5432,
@@ -10,9 +11,8 @@ const sql = postgres({
   max: 5,
   idle_timeout: 20,
   connect_timeout: 10,
-  // @ts-ignore — family forces IPv4; not in types but supported at runtime
-  family: 4,
-});
+  family: 4, // Force IPv4 — Render free tier blocks outbound IPv6
+} as any);
 
 let initialized = false;
 let initPromise: Promise<void> | null = null;
